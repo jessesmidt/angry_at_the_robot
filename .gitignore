@@ -1,0 +1,29 @@
+# Directories
+docs/
+data/
+llm_sdk/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+.venv/
+venv/
+
+# Build / dist
+dist/
+build/
+*.egg-info/
+
+# Caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Misc
+*.log
+.DS_Store
