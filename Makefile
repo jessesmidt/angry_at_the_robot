@@ -1,5 +1,5 @@
 VENV = .venv
-PYTHON := uv run python -m src
+PYTHON := uv run python -m student
 
 .PHONY: install run run-default debug clean lint lint-strict help test
 
@@ -15,23 +15,18 @@ install: venv
 	uv sync --all-groups
 	@echo "Dependencies installed!"
 
-run:
-	@echo "Running program with custom arguments..."
-	$(PYTHON) \
-		--functions_definition $(FUNCTIONS_DEF) \
-		--input $(INPUT_FILE) \
-		--output $(OUTPUT_FILE)
+index:
+	@echo "Chunking repo and creating index..."
+	$(PYTHON) index
 
-run-default:
-	@echo "Running program with default paths..."
-	$(PYTHON)
+run:
+	@echo "Running programm with standard prompt..."
+	$(PYTHON) search "How does vLLM handle batching?"
 
 debug:
 	@echo "Running in debug mode..."
-	uv run python -m pdb -m src \
-		--functions_definition $(FUNCTIONS_DEF) \
-		--input $(INPUT_FILE) \
-		--output $(OUTPUT_FILE)
+	uv run python -m pdb -m student index
+	uv run python -m pdb -m student search "Is this debugger working?"
 
 clean:
 	@echo "Cleaning temporary files and caches..."
@@ -61,8 +56,8 @@ help:
 	@echo "RAG against the macine - Available Make targets:"
 	@echo ""
 	@echo "  make install       - Install dependencies using uv"
-	@echo "  make run           - Run with explicit input/output files"
-	@echo "  make run-default   - Run using default directories"
+	@echo "  make index         - chunk the vLLM repo, build index"
+	@echo "  make run      	 	- run with standard prompt"
 	@echo "  make debug         - Run in debug mode"
 	@echo "  make clean         - Remove temporary files and caches"
 	@echo "  make lint          - Run flake8 and mypy"

@@ -3,3 +3,8 @@
 # understand your question. Once that’s done, it matches the query with the indexed
 # database to choose the best results and finally pulls out the most relevant pieces of
 # information. This involves query encoding, similarity search, and ranking
+
+# loads saved index, takes a query, returns list[Chunk]
+
+import bm25s
+
