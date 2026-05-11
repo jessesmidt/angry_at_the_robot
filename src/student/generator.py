@@ -12,3 +12,10 @@
 # knowledge, and generates the output. Modern RAG systems often refine while
 # writing, adjusting phrasing on the fly to maintain coherence and match the tone
 # requested in the query.
+
+import Qwen
+import transformers
+from .models import Chunk
+
+def generation_station(indices: list[Chunk], prompt: str) -> str:
+    return "yup"

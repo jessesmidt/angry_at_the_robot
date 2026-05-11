@@ -2,8 +2,7 @@
 
 import bm25s
 import os, json, ast
-from typing import Any
-from .models import Chunk, MinimalSource
+from .models import Chunk
 
 def find_char_index(content: str, line_number: int) -> int:
     """
@@ -18,6 +17,7 @@ def find_char_index(content: str, line_number: int) -> int:
     """
     lines = content.split('\n')
     return sum(len(lines[i]) + 1 for i in range(line_number - 1))
+
 
 def walk_repo(repo_path: str) -> list[str]:
     """
@@ -38,12 +38,13 @@ def walk_repo(repo_path: str) -> list[str]:
                 filepaths.append(os.path.join(root, file))
     return filepaths
 
+
 def split_by_size(
         chunk_text: str, start_char: int, max_chunk_size: int, filepath: str
         ) -> list[Chunk]:
     """
     Splits chunk into chunks smaller then max_chunk_size.
-    Optimalizations for newline's
+    Optimalizations for newlines.
 
     Args:
         chunk_text: The whole chunk as a string
@@ -76,6 +77,7 @@ def split_by_size(
         offset = end
     return chunks
 
+
 def chunk_python_file(filepath: str, max_chunk_size: int) -> list[Chunk]:
     with open(filepath, 'r') as f:
         content = f.read()
@@ -103,6 +105,7 @@ def chunk_python_file(filepath: str, max_chunk_size: int) -> list[Chunk]:
                     chunk_id=len(chunks)
                 ))
     return chunks
+
 
 def chunk_text_file(filepath: str, max_chunk_size: int) -> list[Chunk]:
     with open(filepath, 'r') as f:
@@ -139,6 +142,7 @@ def chunk_text_file(filepath: str, max_chunk_size: int) -> list[Chunk]:
         ))
     
     return chunks
+
 
 def save_chunks(chunks: list[Chunk], path: str) -> None:
     os.makedirs(path, exist_ok=True)
