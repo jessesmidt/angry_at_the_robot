@@ -21,10 +21,9 @@ from pydantic import BaseModel
 from .models import Chunk
 from .indexer import load_chunks
 
-class Retriever(BaseModel):
+class Retriever:
     def __init__(self) -> None:
-        self.bm25 = bm25s.BM25()
-        self.bm25.load("data/processed/bm25_index")
+        self.bm25 = bm25s.BM25.load("data/processed/bm_25_index")
         self.chunks = load_chunks("data/processed/chunks")
 
     def retrieve(self, query: str, k: int) -> list[list[Chunk]]:

@@ -20,8 +20,8 @@ index:
 	$(PYTHON) index
 
 run:
-	@echo "Running programm with standard prompt..."
-	$(PYTHON) search "How does vLLM handle batching?"
+	@echo "Running CLI..."
+	$(PYTHON)
 
 debug:
 	@echo "Running in debug mode..."
@@ -34,7 +34,6 @@ clean:
 	rm -rf dist/ build/ *.egg-info
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name ".mypy_cache" -exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	find . -type f -name "*.pyo" -delete 2>/dev/null || true
 	find . -type f -name "*.pyd" -delete 2>/dev/null || true

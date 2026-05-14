@@ -20,7 +20,7 @@ class RagDataset(BaseModel):
 
 class MinimalSearchResults(BaseModel):
     question_id: str
-    question: str
+    question_str: str
     retrieved_sources: list[MinimalSource]
 
 class MinimalAnswer(MinimalSearchResults):

@@ -34,7 +34,8 @@ def walk_repo(repo_path: str) -> list[str]:
         if 'test' in root or '__pycache__' in root:
             continue
         for file in files:
-            if file.endswith('.py') or file.endswith('md'):
+            if file.endswith('.py') or file.endswith('.md') or \
+                file.endswith('.txt') or file.endswith('.jinja'):
                 filepaths.append(os.path.join(root, file))
     return filepaths
 
@@ -62,7 +63,7 @@ def split_by_size(
         end = offset + max_chunk_size
 
         if end < len(chunk_text):
-            newline = chunk_text.rfind('/n', offset, end)
+            newline = chunk_text.rfind('\n', offset, end)
             if newline != -1:
                 end = newline + 1
 
@@ -79,6 +80,14 @@ def split_by_size(
 
 
 def chunk_python_file(filepath: str, max_chunk_size: int) -> list[Chunk]:
+    """
+    Args:
+        filepath: path to data as str
+        max_chunk_size: Max chars per chunk
+        
+    Returns:
+        A list of chunks that fit withing max_chunk_size
+    """
     with open(filepath, 'r') as f:
         content = f.read()
 
@@ -107,10 +116,43 @@ def chunk_python_file(filepath: str, max_chunk_size: int) -> list[Chunk]:
     return chunks
 
 
+def group_tables(content: str) -> str:
+    """
+        Replaces table blocks with single paragraph units
+        so they don't get split mid-table.
+    """
+    lines = content.split('\n')
+    result = []
+    in_table = False
+    table_buffer = []
+    for line in lines:
+        if line.strip().startswith('|'):
+            in_table = True
+            table_buffer.append(line)
+        else:
+            if in_table:
+                result.append('\n'.join(table_buffer))
+                table_buffer = []
+                in_table = False
+            result.append(line)
+    if table_buffer:
+        result.append('\n'.join(table_buffer))
+
+    return '\n'.join(result)
+
 def chunk_text_file(filepath: str, max_chunk_size: int) -> list[Chunk]:
+    """
+    Args:
+        filepath: path to data as str
+        max_chunk_size: Max chars per chunk
+        
+    Returns:
+        A list of chunks that fit withing max_chunk_size
+    """
     with open(filepath, 'r') as f:
         content = f.read()
 
+    content = group_tables(content)
     paragraphs: list[str] = content.split('\n\n')
 
     chunks: list[Chunk] = []
@@ -118,7 +160,7 @@ def chunk_text_file(filepath: str, max_chunk_size: int) -> list[Chunk]:
     current_start: int = 0
 
     for paragraph in paragraphs:
-        if len(current_chunk) + len(paragraph) > max_chunk_size:
+        if len(current_chunk) + len(paragraph) + 2 > max_chunk_size:
             if current_chunk:
                 chunks.append(Chunk(
                     file_path=filepath,
@@ -128,6 +170,13 @@ def chunk_text_file(filepath: str, max_chunk_size: int) -> list[Chunk]:
                     chunk_id=len(chunks)
                 ))
                 current_start += len(current_chunk)
+                current_chunk = ""
+
+            if len(paragraph) > max_chunk_size:
+                sub_chunks = split_by_size(paragraph, current_start, max_chunk_size, filepath)
+                chunks.extend(sub_chunks)
+                current_start += len(paragraph)
+            else:
                 current_chunk = paragraph
         else:
             current_chunk += paragraph + '\n\n'
@@ -140,7 +189,6 @@ def chunk_text_file(filepath: str, max_chunk_size: int) -> list[Chunk]:
             content=current_chunk,
             chunk_id=len(chunks)
         ))
-    
     return chunks
 
 
@@ -155,13 +203,14 @@ def index_repository(repo_path: str, max_chunk_size: int = 2000) -> None:
     chunks: list[Chunk] = []
 
     for filepath in walk_repo(repo_path):
+        print(filepath)
         if filepath.endswith('.py'):
             chunks = chunk_python_file(filepath, max_chunk_size)
         elif filepath.endswith('.md'):
             chunks = chunk_text_file(filepath, max_chunk_size)
         all_chunks.extend(chunks)
         
-    corpus = [chunk.context for chunk in all_chunks]
+    corpus = [chunk.content for chunk in all_chunks]
     retriever = bm25s.BM25()
     retriever.index(bm25s.tokenize(corpus))
 
