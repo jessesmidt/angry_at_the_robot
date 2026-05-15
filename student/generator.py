@@ -13,9 +13,27 @@
 # writing, adjusting phrasing on the fly to maintain coherence and match the tone
 # requested in the query.
 
-import Qwen
-import transformers
+from transformers import AutoTokenizer, AutoModelForCasualLM
+import torch
 from .models import Chunk
 
-def generation_station(indices: list[Chunk], prompt: str) -> str:
-    return "yup"
+class Generator:
+    def __init__(self, model_name: str = "Qwen/Qwen3-0.6B") -> None:
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.model = AutoModelForCasualLM.from_pretrained(
+            model_name,
+            torch_dtype=torch.float16
+            device_map="auto"
+        )
+
+    def _format_prompt(self, question: str, chunks: list[Chunk]) -> str:
+        context = "\n\n".join([chunk.content for chunk in chunks])
+        return f"""Answer the question based only on the context below.
+        Be concise and specific. Cite the source file in your answer. 
+        Context:{context}
+        Question:{question}
+
+        Answer:
+        """
+
+    def generation_station(indices: list[Chunk], prompt: str) -> str:

@@ -116,29 +116,29 @@ def chunk_python_file(filepath: str, max_chunk_size: int) -> list[Chunk]:
     return chunks
 
 
-def group_tables(content: str) -> str:
-    """
-        Replaces table blocks with single paragraph units
-        so they don't get split mid-table.
-    """
-    lines = content.split('\n')
-    result = []
-    in_table = False
-    table_buffer = []
-    for line in lines:
-        if line.strip().startswith('|'):
-            in_table = True
-            table_buffer.append(line)
-        else:
-            if in_table:
-                result.append('\n'.join(table_buffer))
-                table_buffer = []
-                in_table = False
-            result.append(line)
-    if table_buffer:
-        result.append('\n'.join(table_buffer))
+# def group_tables(content: str) -> str:
+#     """
+#         Replaces table blocks with single paragraph units
+#         so they don't get split mid-table.
+#     """
+#     lines = content.split('\n')
+#     result = []
+#     in_table = False
+#     table_buffer = []
+#     for line in lines:
+#         if line.strip().startswith('|'):
+#             in_table = True
+#             table_buffer.append(line)
+#         else:
+#             if in_table:
+#                 result.append('\n'.join(table_buffer))
+#                 table_buffer = []
+#                 in_table = False
+#             result.append(line)
+#     if table_buffer:
+#         result.append('\n'.join(table_buffer))
 
-    return '\n'.join(result)
+#     return '\n'.join(result)
 
 def chunk_text_file(filepath: str, max_chunk_size: int) -> list[Chunk]:
     """
@@ -152,7 +152,7 @@ def chunk_text_file(filepath: str, max_chunk_size: int) -> list[Chunk]:
     with open(filepath, 'r') as f:
         content = f.read()
 
-    content = group_tables(content)
+    # content = group_tables(content)
     paragraphs: list[str] = content.split('\n\n')
 
     chunks: list[Chunk] = []

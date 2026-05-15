@@ -14,6 +14,17 @@ from .models import MinimalSource, MinimalSearchResults, StudentSearchResults
 # 3. Answer questions using an LLM (Qwen/Qwen3-0.6B) with the retrieved context
 # 4. Evaluate your retrieval system’s quality using recall@k metrics
 
+
+# Provide a CLI using Python Fire with these commands:
+# ◦index: Index the repository
+# ◦search: Search for a single query
+# ◦search_dataset: Process multiple questions and output search results
+# ◦answer: Answer a single question with context
+# RAG against the machine Will you answer my questions?
+# ◦answer_dataset: Generate answers from search results
+# ◦evaluate: Evaluate search results against ground truth
+
+
 class RAG(BaseModel):
     def __init__(self) -> None:
         pass

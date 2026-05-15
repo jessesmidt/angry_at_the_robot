@@ -1,7 +1,15 @@
 VENV = .venv
 PYTHON := uv run python -m student
 
-.PHONY: install run run-default debug clean lint lint-strict help test
+DOCS_UNANSWERED := data/datasets_public/public/UnansweredQuestions/dataset_docs_public.json
+CODE_UNANSWERED := data/datasets_public/public/UnansweredQuestions/dataset_code_public.json
+DOCS_ANSWERED := data/datasets_public/public/AnsweredQuestions/dataset_docs_public.json
+CODE_ANSWERED := data/datasets_public/public/AnsweredQuestions/dataset_code_public.json
+MOULINETTE := data/moulinette/moulinette_pkg/moulinette-ubuntu
+OUTPUT_DIR := data/output/search_results
+
+.PHONY: install run debug clean lint lint-strict help
+.PHONY: index search search_docs search_code evaluate evaluate_docs evaluate_code
 
 .DEFAULT_GOAL := help
 
@@ -18,6 +26,52 @@ install: venv
 index:
 	@echo "Chunking repo and creating index..."
 	$(PYTHON) index
+
+search:
+	@echo "Usage: make search Q='your question here'"
+	$(PYTHON) search "$(Q)"
+
+search_docs:
+	@echo "Searching docs dataset..."
+	$(PYTHON) search_dataset \
+		--dataset_path $(DOCS_UNANSWERED) \
+		--k 5 \
+		--save_dir $(OUTPUT_DIR)
+
+search_code:
+	@echo "Searching code dataset..."
+	$(PYTHON) search_dataset \
+		--dataset_path $(CODE_UNANSWERED) \
+		--k 5 \
+		--save_dir $(OUTPUT_DIR)
+
+search_all: search_docs search_code
+
+evaluate_docs:
+	@echo "Evaluating docs recall..."
+	chmod +x $(MOULINETTE)
+	$(MOULINETTE) evaluate_student_search_results \
+		$(OUTPUT_DIR)/dataset_docs_public.json \
+		$(DOCS_ANSWERED) \
+		--k 5 \
+		--max_context_length 2000 \
+		--threshold 0.80
+
+evaluate_code:
+	@echo "Evaluating code recall..."
+	chmod +x $(MOULINETTE)
+	$(MOULINETTE) evaluate_student_search_results \
+		$(OUTPUT_DIR)/dataset_code_public.json \
+		$(CODE_ANSWERED) \
+		--k 5 \
+		--max_context_length 2000 \
+		--threshold 0.50
+
+evaluate: evaluate_docs evaluate_code
+
+tmp: index
+	$(MAKE) search_all
+	$(MAKE) evaluate
 
 run:
 	@echo "Running CLI..."
@@ -52,14 +106,21 @@ lint-strict:
 	uv run mypy . --strict
 
 help:
-	@echo "RAG against the macine - Available Make targets:"
+	@echo "RAG against the machine - Available Make targets:"
 	@echo ""
-	@echo "  make install       - Install dependencies using uv"
-	@echo "  make index         - chunk the vLLM repo, build index"
-	@echo "  make run      	 	- run with standard prompt"
-	@echo "  make debug         - Run in debug mode"
-	@echo "  make clean         - Remove temporary files and caches"
-	@echo "  make lint          - Run flake8 and mypy"
-	@echo "  make lint-strict   - Run strict linting"
-	@echo "  make help          - Show this help message"
+	@echo "  make install         - Install dependencies using uv"
+	@echo "  make index           - Chunk the vLLM repo and build index"
+	@echo "  make search Q='...'  - Search a single query"
+	@echo "  make search_docs     - Search docs dataset"
+	@echo "  make search_code     - Search code dataset"
+	@echo "  make search_all      - Search both datasets"
+	@echo "  make evaluate_docs   - Evaluate docs recall@5"
+	@echo "  make evaluate_code   - Evaluate code recall@5"
+	@echo "  make evaluate        - Evaluate both datasets"
+	@echo "  make run             - Run CLI"
+	@echo "  make debug           - Run in debug mode"
+	@echo "  make clean           - Remove temporary files and caches"
+	@echo "  make lint            - Run flake8 and mypy"
+	@echo "  make lint-strict     - Run strict linting"
+	@echo "  make help            - Show this help message"
 	@echo ""

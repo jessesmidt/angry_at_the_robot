@@ -2,7 +2,7 @@ https://pypi.org/project/bm25s/
 https://docs.python.org/3/library/ast.html
 https://github.com/xhluca/bm25s
 https://github.com/google/python-fire/blob/master/docs/guide.md
-
+https://huggingface.co/docs/transformers/model_doc/auto
 
 
  <!-- docs moulinette recall@k check -->
@@ -38,3 +38,4 @@ chmod +x moulinette-ubuntu
     --k 5
 
 ../../..
+
