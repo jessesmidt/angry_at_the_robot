@@ -31,7 +31,7 @@ class RAG(BaseModel):
 
     def index(self, max_chunk_size: int = 2000) -> None:
         index_repository("data/raw/vllm-0.10.1", max_chunk_size)
-        print(f"Succesfully indexed data into max chunk size {max_chunk_size}")
+        # print(f"Succesfully indexed data into max chunk size {max_chunk_size}")
 
     def search(self, query: str, k: int = 5) -> None:
         retriever = Retriever()

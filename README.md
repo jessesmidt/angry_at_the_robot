@@ -1,9 +1,11 @@
 https://pypi.org/project/bm25s/
+https://huggingface.co/docs/transformers/main_classes/tokenizer
 https://docs.python.org/3/library/ast.html
+https://huggingface.co/Qwen/Qwen3-0.6B
 https://github.com/xhluca/bm25s
 https://github.com/google/python-fire/blob/master/docs/guide.md
 https://huggingface.co/docs/transformers/model_doc/auto
-
+https://tqdm.github.io/
 
  <!-- docs moulinette recall@k check -->
 

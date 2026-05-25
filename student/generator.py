@@ -36,4 +36,14 @@ class Generator:
         Answer:
         """
 
-    def generation_station(indices: list[Chunk], prompt: str) -> str:
+    def generate(self, question: str, chunks: list[Chunk]) -> str:
+        prompt = self._format_prompt(question, chunks)
+        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
+
+        with torch.no_grad():
+            outputs = self.model.generate(
+                **inputs,
+                max_new_tokens=200,
+                do_sample=False,
+                pad_token_id=self.tokenizer.eos_token_id
+            )

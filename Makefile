@@ -24,23 +24,23 @@ install: venv
 	@echo "Dependencies installed!"
 
 index:
-	@echo "Chunking repo and creating index..."
-	$(PYTHON) index
+	@echo "RAG against the machine - jsmidt"
+	@$(PYTHON) index
 
 search:
 	@echo "Usage: make search Q='your question here'"
-	$(PYTHON) search "$(Q)"
+	@$(PYTHON) search "$(Q)"
 
 search_docs:
 	@echo "Searching docs dataset..."
-	$(PYTHON) search_dataset \
+	@$(PYTHON) search_dataset \
 		--dataset_path $(DOCS_UNANSWERED) \
 		--k 5 \
 		--save_dir $(OUTPUT_DIR)
 
 search_code:
 	@echo "Searching code dataset..."
-	$(PYTHON) search_dataset \
+	@$(PYTHON) search_dataset \
 		--dataset_path $(CODE_UNANSWERED) \
 		--k 5 \
 		--save_dir $(OUTPUT_DIR)
@@ -49,8 +49,8 @@ search_all: search_docs search_code
 
 evaluate_docs:
 	@echo "Evaluating docs recall..."
-	chmod +x $(MOULINETTE)
-	$(MOULINETTE) evaluate_student_search_results \
+	@chmod +x $(MOULINETTE)
+	@$(MOULINETTE) evaluate_student_search_results \
 		$(OUTPUT_DIR)/dataset_docs_public.json \
 		$(DOCS_ANSWERED) \
 		--k 5 \
@@ -59,8 +59,8 @@ evaluate_docs:
 
 evaluate_code:
 	@echo "Evaluating code recall..."
-	chmod +x $(MOULINETTE)
-	$(MOULINETTE) evaluate_student_search_results \
+	@chmod +x $(MOULINETTE)
+	@$(MOULINETTE) evaluate_student_search_results \
 		$(OUTPUT_DIR)/dataset_code_public.json \
 		$(CODE_ANSWERED) \
 		--k 5 \
@@ -70,8 +70,8 @@ evaluate_code:
 evaluate: evaluate_docs evaluate_code
 
 tmp: index
-	$(MAKE) search_all
-	$(MAKE) evaluate
+	@$(MAKE) -s search_all
+	@$(MAKE) -s evaluate
 
 run:
 	@echo "Running CLI..."

@@ -2,6 +2,7 @@
 
 import bm25s
 import os, json, ast
+from tqdm import tqdm
 from .models import Chunk
 
 def find_char_index(content: str, line_number: int) -> int:
@@ -202,8 +203,8 @@ def index_repository(repo_path: str, max_chunk_size: int = 2000) -> None:
     all_chunks: list[Chunk] = []
     chunks: list[Chunk] = []
 
-    for filepath in walk_repo(repo_path):
-        print(filepath)
+    print(f"\nIndexing repository...")
+    for filepath in tqdm(walk_repo(repo_path), leave=False):
         if filepath.endswith('.py'):
             chunks = chunk_python_file(filepath, max_chunk_size)
         elif filepath.endswith('.md'):
