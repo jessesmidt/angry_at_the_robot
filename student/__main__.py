@@ -2,9 +2,11 @@ import os
 import sys
 import fire
 from pydantic import BaseModel
+from .dataset import dataset_loader
+from .generator import Generator
 from .indexer import index_repository
 from .retriever import Retriever
-from .dataset import dataset_loader
+
 from .models import MinimalSource, MinimalSearchResults, StudentSearchResults
 
 # 1. Ingest the vLLM repository (provided as attachment) and create a searchable
@@ -13,17 +15,6 @@ from .models import MinimalSource, MinimalSearchResults, StudentSearchResults
 # given questions
 # 3. Answer questions using an LLM (Qwen/Qwen3-0.6B) with the retrieved context
 # 4. Evaluate your retrieval system’s quality using recall@k metrics
-
-
-# Provide a CLI using Python Fire with these commands:
-# ◦index: Index the repository
-# ◦search: Search for a single query
-# ◦search_dataset: Process multiple questions and output search results
-# ◦answer: Answer a single question with context
-# RAG against the machine Will you answer my questions?
-# ◦answer_dataset: Generate answers from search results
-# ◦evaluate: Evaluate search results against ground truth
-
 
 class RAG(BaseModel):
     def __init__(self) -> None:
@@ -79,7 +70,11 @@ class RAG(BaseModel):
         print(f"Succesfully written search results to: {save_dir}")
 
     def answer(self, query: str, k: int = 5) -> None:
-        pass
+        retriever = Retriever()
+        generator = Generator()
+        results = retriever.retrieve(query, k)
+        print(generator.generate(query, results))
+
 
     def answer_dataset(self) -> None:
         pass
@@ -87,7 +82,7 @@ class RAG(BaseModel):
     def evaluate(self) -> None:
         pass
 
-# make sure to implement testing for vLLM presence.
+# reminder: implement testing for vLLM presence.
 
 if __name__ == "__main__":
     fire.Fire(RAG)

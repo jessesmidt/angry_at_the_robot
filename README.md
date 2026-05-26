@@ -7,6 +7,11 @@ https://github.com/google/python-fire/blob/master/docs/guide.md
 https://huggingface.co/docs/transformers/model_doc/auto
 https://tqdm.github.io/
 
+
+ <!-- test generation -->
+
+  uv run python -m student answer "How does vLLM handle batching?" --k 5 
+
  <!-- docs moulinette recall@k check -->
 
 cd /home/jsmidt/Desktop/CC/C4/rag/data/moulinette/moulinette_pkg

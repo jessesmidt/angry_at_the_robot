@@ -26,8 +26,9 @@ class Retriever:
         self.bm25 = bm25s.BM25.load("data/processed/bm_25_index")
         self.chunks = load_chunks("data/processed/chunks")
 
-    def retrieve(self, query: str, k: int) -> list[list[Chunk]]:
+    def retrieve(self, query: str, k: int) -> list[Chunk]:
         query_tokens = bm25s.tokenize(query)
         results, _ = self.bm25.retrieve(query_tokens, k=k)
 
-        return [self.chunks[i] for i in results[0]]
+        return [self.chunks[int(i)] for i in results[0]]
+
