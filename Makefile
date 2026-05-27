@@ -67,15 +67,21 @@ evaluate_code:
 		--max_context_length 2000 \
 		--threshold 0.50
 
-evaluate: evaluate_docs evaluate_code
+evaluate: 
+	evaluate_docs evaluate_code
 
-tmp: index
-	@$(MAKE) -s search_all
-	@$(MAKE) -s evaluate
+answer_docs: 
+		$(PYTHON) answer_dataset \
+        --student_search_results_path data/output/search_results/dataset_docs_public.json \
+        --save_directory data/output/search_results_and_answer
 
-run:
-	@echo "Running CLI..."
-	$(PYTHON)
+answer_code: 
+		$(PYTHON) answer_dataset \
+        --student_search_results_path data/output/search_results/dataset_code_public.json \
+        --save_directory data/output/search_results_and_answer
+
+answer_all: answer_docs answer_code
+
 
 debug:
 	@echo "Running in debug mode..."

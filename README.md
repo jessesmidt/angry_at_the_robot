@@ -8,9 +8,11 @@ https://huggingface.co/docs/transformers/main_classes/tokenizer
 https://pypi.org/project/bm25s/
 https://tqdm.github.io/
 
- <!-- test generation -->
+ <!-- test answer -->
 
+  uv run python -m student answer "How to configure OpenAI server?" --k 5
   uv run python -m student answer "How does vLLM handle batching?" --k 5 
+  uv run python -m student answer "How do you enable tensor parallelism in vLLM?" --k 5
 
  <!-- docs moulinette recall@k check -->
 

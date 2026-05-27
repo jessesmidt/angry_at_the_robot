@@ -2,13 +2,15 @@ import os
 import sys
 import fire
 import json
+import time
+from tqdm import tqdm
 from pydantic import BaseModel
 from .dataset import dataset_loader
 from .generator import Generator
 from .indexer import index_repository
 from .retriever import Retriever
 
-from .models import MinimalSource, MinimalSearchResults, StudentSearchResults
+from .models import StudentSearchResultsAndAnswer, MinimalAnswer, MinimalSource, MinimalSearchResults, StudentSearchResults, Chunk
 
 # 1. Ingest the vLLM repository (provided as attachment) and create a searchable
 # knowledge base
@@ -17,17 +19,17 @@ from .models import MinimalSource, MinimalSearchResults, StudentSearchResults
 # 3. Answer questions using an LLM (Qwen/Qwen3-0.6B) with the retrieved context
 # 4. Evaluate your retrieval system’s quality using recall@k metrics
 
-class RAG(BaseModel):
+class RAG:
     def __init__(self) -> None:
-        pass
+        self.retriever = Retriever()
+        self.generator = Generator()
 
     def index(self, max_chunk_size: int = 2000) -> None:
         index_repository("data/raw/vllm-0.10.1", max_chunk_size)
         # print(f"Succesfully indexed data into max chunk size {max_chunk_size}")
 
     def search(self, query: str, k: int = 5) -> None:
-        retriever = Retriever()
-        results = retriever.retrieve(query, k)
+        results = self.retriever.retrieve(query, k)
         for chunk in results:
             print(f"File: {chunk.file_path}")
             print(f"Chars: {chunk.first_character_index} -> {chunk.last_character_index}")
@@ -40,7 +42,6 @@ class RAG(BaseModel):
             k: int = 5,
             save_dir: str = "data/output/search_results"
             ) -> None:
-        retriever = Retriever()
         try:
             dataset = dataset_loader(dataset_path)
         except FileNotFoundError as e:
@@ -49,7 +50,7 @@ class RAG(BaseModel):
 
         search_results = []
         for question in dataset.rag_questions:
-            chunks = retriever.retrieve(question.question, k)
+            chunks = self.retriever.retrieve(question.question, k)
             sources = [MinimalSource(
                 file_path=chunk.file_path,
                 first_character_index=chunk.first_character_index,
@@ -71,23 +72,55 @@ class RAG(BaseModel):
         print(f"Succesfully written search results to: {save_dir}")
 
     def answer(self, query: str, k: int = 5) -> None:
-        retriever = Retriever()
-        generator = Generator()
-        results = retriever.retrieve(query, k)
-        print(f"\n\n{generator.generate(query, results, True)}")
         
+        results = self.retriever.retrieve(query, k)
+        print("Answer:\n")
+        self.generator.generate(query, results, True)
 
-    def answer_dataset(self) -> None:
-        # data = json.loads(generator.generate(query, results))
-        # os.makedirs(os.path.dirname(filename), exist_ok=True)
-        # with open("output.txt", 'w') as f:
-        #     json.dump(data, f, indent=4)
+    def answer_dataset(self, student_search_results_path: str, save_directory: str) -> None:
+        """
+        
+        """
+        start_time = time.time()
+        with open(student_search_results_path, 'r') as f:
+            search_results = StudentSearchResults(**json.load(f))
+
+        answers: list[MinimalAnswer] = []
+    
+        for result in tqdm(search_results.search_results, leave=False):
+            chunks: list[Chunk] = []
+            for source in result.retrieved_sources:
+                with open(source.file_path, 'r') as f:
+                    content = f.read()
+                chunk_text = content[source.first_character_index:source.last_character_index]
+                chunks.append(Chunk(
+                    file_path=source.file_path,
+                    first_character_index=source.first_character_index,
+                    last_character_index=source.last_character_index,
+                    content=chunk_text,
+                    chunk_id=0
+                ))
+
+            answers.append(MinimalAnswer(
+                question_id=result.question_id,
+                question_str=result.question_str,
+                retrieved_sources=result.retrieved_sources,
+                answer=self.generator.generate(result.question_str, chunks, False)
+            ))
+
+        output = StudentSearchResultsAndAnswer(search_results=answers, k=search_results.k)
+        os.makedirs(os.path.dirname(f"{save_directory}.json"), exist_ok=True)
+        filename = os.path.basename(student_search_results_path)
+        with open(f"{save_directory}.json", 'w') as f:
+            f.write(output.model_dump_json(indent=2))
+
+        print(
+            f"Completed answering questions in {(time.time() - start_time):.0f} seconds"
+            )
+
+    def evaluate(self, student_answer_path: str, dataset_path: str, k: int = 5, max_context_length: int = 2000) -> None:
         pass
-
-    def evaluate(self) -> None:
-        pass
-
-# reminder: implement testing for vLLM presence.
+    # reminder: implement testing for vLLM presence.
 
 if __name__ == "__main__":
     fire.Fire(RAG)

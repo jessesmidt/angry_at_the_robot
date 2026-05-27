@@ -81,7 +81,8 @@ class Generator:
         text = self.tokenizer.apply_chat_template(
             messages,
             tokenize=False,
-            add_generation_prompt=True
+            add_generation_prompt=True,
+            enable_thinking=False
         )
 
         inputs = self.tokenizer(text, return_tensors="pt").to(self.model.device)
@@ -96,7 +97,6 @@ class Generator:
                 eos_token_id=self.tokenizer.eos_token_id,
                 pad_token_id=self.tokenizer.eos_token_id,
                 streamer=streamer
-                # enable_thinking=False
             )
 
         new_tokens = outputs[0][inputs["input_ids"].shape[1]:]

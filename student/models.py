@@ -31,7 +31,7 @@ class StudentSearchResults(BaseModel):
     k: int
 
 class StudentSearchResultsAndAnswer(StudentSearchResults):
-    search_results_ans: list[MinimalAnswer]
+    search_results: list[MinimalAnswer]  # type: ignore[override]
 
 class Chunk(BaseModel):
     file_path: str
