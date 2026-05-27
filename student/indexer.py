@@ -218,6 +218,7 @@ def index_repository(repo_path: str, max_chunk_size: int = 2000) -> None:
     retriever.save("data/processed/bm_25_index")
     save_chunks(all_chunks, "data/processed/chunks")
 
+
 def load_chunks(path: str) -> list[Chunk]:
     with open(os.path.join(path, "chunks.json"), 'r') as f:
         data = json.load(f)

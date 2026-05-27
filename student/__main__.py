@@ -1,6 +1,7 @@
 import os
 import sys
 import fire
+import json
 from pydantic import BaseModel
 from .dataset import dataset_loader
 from .generator import Generator
@@ -73,10 +74,14 @@ class RAG(BaseModel):
         retriever = Retriever()
         generator = Generator()
         results = retriever.retrieve(query, k)
-        print(generator.generate(query, results))
-
+        print(f"\n\n{generator.generate(query, results, True)}")
+        
 
     def answer_dataset(self) -> None:
+        # data = json.loads(generator.generate(query, results))
+        # os.makedirs(os.path.dirname(filename), exist_ok=True)
+        # with open("output.txt", 'w') as f:
+        #     json.dump(data, f, indent=4)
         pass
 
     def evaluate(self) -> None:

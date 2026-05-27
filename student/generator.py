@@ -13,7 +13,7 @@
 # writing, adjusting phrasing on the fly to maintain coherence and match the tone
 # requested in the query.
 
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, TextStreamer
 import torch
 from .models import Chunk
 
@@ -22,32 +22,38 @@ class Generator:
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForCausalLM.from_pretrained(
             model_name,
-            torch_dtype=torch.float16
+            dtype=torch.float32
         )
 
-    def _format_prompt(self, question: str, chunks: list[Chunk]) -> str:
-        """
-        Catenates all the found chunks and creates the prompt
-        for the LLM
+    # def _format_prompt(self, question: str, chunks: list[Chunk]) -> str:
+    #     """
+    #     Catenates all the found chunks and creates the prompt
+    #     for the LLM
 
-        Args: 
-            question = the input prompt
-            chunks = A list of chunks in which the required
-                context is given
+    #     Args: 
+    #         question = the input prompt
+    #         chunks = A list of chunks in which the required
+    #             context is given
 
-        Returns:
-            The prompt ready to send to the LLM
-        """
-        context = "\n\n".join([chunk.content for chunk in chunks])
-        return f"""Answer the question based only on the context below.
-        Be concise and specific. Cite the source file in your answer. 
-        Context:{context}
-        Question:{question}
+    #     Returns:
+    #         The prompt ready to send to the LLM
+    #     """
+    #     context = "\n\n".join([chunk.content for chunk in chunks])
+    #     return f"""You're a RAG agent. Here is your context:
 
-        Answer:
-        """
+    #     Context: {context}
+        
 
-    def generate(self, question: str, chunks: list[Chunk]) -> str:
+    #     Answer the question below based ONLY on the given context.
+    #     Do not use any external knowledge or URLs not present in the context.
+    #     ONLY cite the used source file's filepath. 
+    #     Keep your answer to 1-2 sentences maximum. do NOT repeat 
+
+    #     Question: {question}
+
+    #     Answer:"""
+
+    def generate(self, question: str, chunks: list[Chunk], stream: bool) -> str:
         """
         Generates an answer using the LLM. Sends a question and
         all context to the class' model
@@ -60,15 +66,37 @@ class Generator:
         Returns:
             The LLM's answer to our question in a string.
         """
-        prompt = self._format_prompt(question, chunks)
-        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
+        context = "\n\n".join([chunk.content for chunk in chunks])
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a helpful assistant. Answer questions based only on the provided context. Keep answers to 2-3 sentences. Do not hallucinate."
+            },
+            {
+                "role": "user", 
+                "content": f"Context:\n{context}\n\nQuestion: {question}"
+            }
+        ]
+
+        text = self.tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True
+        )
+
+        inputs = self.tokenizer(text, return_tensors="pt").to(self.model.device)
+
+        streamer = TextStreamer(self.tokenizer, skip_prompt=True, skip_special_tokens=True) if stream else None
 
         with torch.no_grad():
             outputs = self.model.generate(
                 **inputs,
                 max_new_tokens=200,
                 do_sample=False,
-                pad_token_id=self.tokenizer.eos_token_id
+                eos_token_id=self.tokenizer.eos_token_id,
+                pad_token_id=self.tokenizer.eos_token_id,
+                streamer=streamer
+                # enable_thinking=False
             )
 
         new_tokens = outputs[0][inputs["input_ids"].shape[1]:]
