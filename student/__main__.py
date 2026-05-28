@@ -127,7 +127,7 @@ class RAG:
     def evaluate(self, student_answer_path: str, dataset_path: str, max_context_length: int = 2000) -> None:
         from .eval import recall_at_k
         for k_val in [1, 3, 5, 10]:
-            score = recall_at_k(student_answer_path, dataset_path, k_val)
+            score = recall_at_k(student_answer_path, dataset_path)
             print(f"Recall@{k_val}: {score:.3f} ({score*100:.1f}%)")
 
 
