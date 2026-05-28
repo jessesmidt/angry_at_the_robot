@@ -1,5 +1,6 @@
 VENV = .venv
 PYTHON := uv run python -m student
+MAKEFLAGS += --silent
 
 DOCS_UNANSWERED := data/datasets_public/public/UnansweredQuestions/dataset_docs_public.json
 CODE_UNANSWERED := data/datasets_public/public/UnansweredQuestions/dataset_code_public.json
@@ -45,10 +46,37 @@ search_code:
 		--k 5 \
 		--save_dir $(OUTPUT_DIR)
 
-search_all: search_docs search_code
+search_all:	search_docs	search_code
+
+answer_docs: 
+		@$(PYTHON) answer_dataset \
+		--student_search_results_path data/output/search_results/dataset_docs_public.json \
+		--save_directory data/output/search_results_and_answer
+
+answer_code: 
+		@$(PYTHON) answer_dataset \
+		--student_search_results_path data/output/search_results/dataset_code_public.json \
+		--save_directory data/output/search_results_and_answer
+
+answer_all: answer_docs answer_code
 
 evaluate_docs:
-	@echo "Evaluating docs recall..."
+		@$(PYTHON) evaluate \
+		--student_answer_path $(OUTPUT_DIR)/dataset_docs_public.json \
+		--dataset_path $(DOCS_ANSWERED) \
+		--max_context_length 2000
+
+evaluate_code:
+		@$(PYTHON) evaluate \
+		--student_answer_path $(OUTPUT_DIR)/dataset_code_public.json \
+		--dataset_path $(CODE_ANSWERED) \
+		--max_context_length 2000
+
+evaluate:
+	@$(MAKE) evaluate_docs
+	@$(MAKE) evaluate_code
+
+evaluate_docs_moulinette:
 	@chmod +x $(MOULINETTE)
 	@$(MOULINETTE) evaluate_student_search_results \
 		$(OUTPUT_DIR)/dataset_docs_public.json \
@@ -57,8 +85,7 @@ evaluate_docs:
 		--max_context_length 2000 \
 		--threshold 0.80
 
-evaluate_code:
-	@echo "Evaluating code recall..."
+evaluate_code_moulinette:
 	@chmod +x $(MOULINETTE)
 	@$(MOULINETTE) evaluate_student_search_results \
 		$(OUTPUT_DIR)/dataset_code_public.json \
@@ -67,21 +94,7 @@ evaluate_code:
 		--max_context_length 2000 \
 		--threshold 0.50
 
-evaluate: 
-	evaluate_docs evaluate_code
-
-answer_docs: 
-		$(PYTHON) answer_dataset \
-        --student_search_results_path data/output/search_results/dataset_docs_public.json \
-        --save_directory data/output/search_results_and_answer
-
-answer_code: 
-		$(PYTHON) answer_dataset \
-        --student_search_results_path data/output/search_results/dataset_code_public.json \
-        --save_directory data/output/search_results_and_answer
-
-answer_all: answer_docs answer_code
-
+evaluate_moulinette: evaluate_docs_moulinette evaluate_code_moulinette
 
 debug:
 	@echo "Running in debug mode..."
@@ -123,7 +136,6 @@ help:
 	@echo "  make evaluate_docs   - Evaluate docs recall@5"
 	@echo "  make evaluate_code   - Evaluate code recall@5"
 	@echo "  make evaluate        - Evaluate both datasets"
-	@echo "  make run             - Run CLI"
 	@echo "  make debug           - Run in debug mode"
 	@echo "  make clean           - Remove temporary files and caches"
 	@echo "  make lint            - Run flake8 and mypy"

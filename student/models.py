@@ -1,3 +1,5 @@
+# pyright: reportMissingImports=false
+
 from pydantic import BaseModel, Field
 import uuid
 

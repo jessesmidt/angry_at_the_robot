@@ -6,6 +6,7 @@ https://huggingface.co/docs/transformers/model_doc/auto
 https://huggingface.co/Qwen/Qwen3-8B
 https://huggingface.co/docs/transformers/main_classes/tokenizer
 https://pypi.org/project/bm25s/
+https://pyimagesearch.com/2016/11/07/intersection-over-union-iou-for-object-detection/
 https://tqdm.github.io/
 
  <!-- test answer -->
